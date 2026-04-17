@@ -31,6 +31,7 @@
     "targets": [
       "nsis"
     ],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/defaultapp.png",
       "icons/defaultapp.ico"
