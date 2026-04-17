@@ -716,12 +716,6 @@ button {
   font-size: var(--settings-body-size);
 }
 
-.modal-header,
-.modal-footer {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border-light);
-}
-
 .modal-header {
   font-size: var(--settings-title-size);
   font-weight: 600;
@@ -729,16 +723,59 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-light);
 }
 
-.modal-version {
-  font-size: var(--settings-meta-size);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: var(--text-soft);
-  background: transparent;
+.version-action-badge {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0;
   border: 1px solid var(--border);
-  padding: 2px 8px;
   border-radius: 12px;
+  background: transparent;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.version-action-badge:hover {
+  border-color: var(--primary);
+  background: var(--card-hover-alt);
+}
+
+.version-action-badge:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.version-text {
+  padding: 0 8px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.version-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--border);
+}
+
+.version-label {
+  padding: 0 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.version-action-badge:hover .version-label {
+  color: var(--primary);
+}
+
+.version-action-badge:hover .version-text {
+  color: var(--text);
 }
 
 .modal-body {
@@ -749,8 +786,8 @@ button {
 }
 
 .modal-footer {
+  padding: 12px 20px;
   border-top: 1px solid var(--border-light);
-  border-bottom: none;
   display: flex;
   align-items: center;
   justify-content: space-between;

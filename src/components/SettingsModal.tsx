@@ -94,17 +94,20 @@ export function SettingsModal({
       <div className="modal-card">
         <div className="modal-header">
           <span>Gotify 客户端设置</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div className="version-group">
             <button
               type="button"
-              className="ghost-button"
+              className="version-action-badge"
               onClick={handleCheckUpdate}
               disabled={checkingUpdate}
-              style={{ height: "24px", padding: "0 8px", fontSize: "12px" }}
+              title="点击检查更新"
             >
-              {checkingUpdate ? "正在检查..." : "检查更新"}
+              <span className="version-text">v{appVersion || "0.0.3"}</span>
+              <span className="version-divider"></span>
+              <span className="version-label">
+                {checkingUpdate ? "正在检查..." : "检查更新"}
+              </span>
             </button>
-            <span className="modal-version">{appVersion || "-"}</span>
           </div>
         </div>
         <div className="modal-body">
