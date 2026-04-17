@@ -61,12 +61,38 @@ jobs:
         run: npm run tauri:build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+
+      - name: Generate latest.json
+        shell: pwsh
+        run: |
+          $sigPath = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.sig" | Select-Object -First 1
+          if ($null -eq $sigPath) { Write-Error "Signature file not found"; exit 1 }
+          $sig = Get-Content -Path $sigPath.FullName -Raw
+          $zipPath = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.zip" | Select-Object -First 1
+          $zipName = $zipPath.Name
+
+          $latestJson = @{
+            version = $env:GITHUB_REF_NAME
+            notes = "Update to $($env:GITHUB_REF_NAME)"
+            pub_date = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+            platforms = @{
+              "windows-x86_64" = @{
+                signature = $sig.Trim()
+                url = "https://github.com/Edwinzzzs2/gotify_pc_tauri/releases/download/$env:GITHUB_REF_NAME/$zipName"
+              }
+            }
+          }
+          $latestJson | ConvertTo-Json -Depth 5 -Compress | Set-Content "latest.json" -Encoding utf8
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/nsis/*.zip
+            src-tauri/target/release/bundle/nsis/*.sig
+            latest.json
           draft: false
           prerelease: false
         env:

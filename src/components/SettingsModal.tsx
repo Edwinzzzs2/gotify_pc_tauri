@@ -1,5 +1,8 @@
 import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { check } from '@tauri-apps/plugin-updater';
+import { ask, message } from '@tauri-apps/plugin-dialog';
+import { relaunch } from '@tauri-apps/plugin-process';
 import { themeLabels } from "@/lib/theme";
 import type { ApplicationInfo, Config, SettingsNotice } from "@/lib/types";
 
@@ -45,6 +48,32 @@ export function SettingsModal({
   applyingStoragePath,
 }: SettingsModalProps) {
   const [showToken, setShowToken] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    try {
+      setCheckingUpdate(true);
+      const update = await check();
+      if (update) {
+        const yes = await ask(`发现新版本 ${update.version}，发布时间: ${update.date?.split(' ')[0] || ''}\n\n更新说明:\n${update.body || '无详细说明'}\n\n是否立即下载并更新？`, {
+          title: '发现新版本',
+          kind: 'info',
+        });
+        if (yes) {
+          await update.downloadAndInstall();
+          await relaunch();
+        }
+      } else {
+        await message('当前已是最新版本', { title: '检查更新', kind: 'info' });
+      }
+    } catch (err: any) {
+      console.error(err);
+      await message(`检查更新失败: ${err.message || String(err)}`, { title: '检查更新失败', kind: 'error' });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
   if (!open) {
     return null;
   }
@@ -65,7 +94,18 @@ export function SettingsModal({
       <div className="modal-card">
         <div className="modal-header">
           <span>Gotify 客户端设置</span>
-          <span className="modal-version">{appVersion || "-"}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={handleCheckUpdate}
+              disabled={checkingUpdate}
+              style={{ height: "24px", padding: "0 8px", fontSize: "12px" }}
+            >
+              {checkingUpdate ? "正在检查..." : "检查更新"}
+            </button>
+            <span className="modal-version">{appVersion || "-"}</span>
+          </div>
         </div>
         <div className="modal-body">
           <section className="section-card">

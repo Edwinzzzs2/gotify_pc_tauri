@@ -28,7 +28,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/defaultapp.png",
       "icons/defaultapp.ico"
@@ -39,6 +41,13 @@
         "installMode": "both"
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Edwinzzzs2/gotify_pc_tauri/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ1QzU2RkI5RUMwNkNDMTUKUldRVnpBYnN1Vy9GMVhnLzBJSVRWN2dQTGFlcU5rUG1WYjNqUlRYSlVDMk1BcU5lVm1EdlR0dVQK"
+    }
   }
 }
-
