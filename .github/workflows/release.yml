@@ -69,8 +69,11 @@ jobs:
           $sigPath = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.sig" | Select-Object -First 1
           if ($null -eq $sigPath) { Write-Error "Signature file not found"; exit 1 }
           $sig = Get-Content -Path $sigPath.FullName -Raw
-          $zipPath = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.zip" | Select-Object -First 1
-          $zipName = $zipPath.Name
+
+          # Tauri 2 NSIS builds produce a .exe installer (not .zip), find it directly
+          $exePath = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.exe" | Select-Object -First 1
+          if ($null -eq $exePath) { Write-Error "Installer .exe not found"; exit 1 }
+          $exeName = $exePath.Name
 
           $latestJson = @{
             version = $env:GITHUB_REF_NAME
@@ -79,7 +82,7 @@ jobs:
             platforms = @{
               "windows-x86_64" = @{
                 signature = $sig.Trim()
-                url = "https://github.com/Edwinzzzs2/gotify_pc_tauri/releases/download/$env:GITHUB_REF_NAME/$zipName"
+                url = "https://github.com/Edwinzzzs2/gotify_pc_tauri/releases/download/$env:GITHUB_REF_NAME/$exeName"
               }
             }
           }
