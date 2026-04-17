@@ -78,6 +78,12 @@ export function SettingsModal({
     return null;
   }
 
+  const displayAppVersion = appVersion
+    ? appVersion.startsWith("v")
+      ? appVersion
+      : `v${appVersion}`
+    : "v0.0.3";
+
   const toggleNumberList = (key: "mutedNotificationApps" | "barkForwardApps", id: number) => {
     setConfig((prev) => {
       const current = Array.isArray(prev[key]) ? prev[key] : [];
@@ -93,20 +99,21 @@ export function SettingsModal({
       <div className="modal-backdrop" onClick={onClose}></div>
       <div className="modal-card">
         <div className="modal-header">
-          <span>Gotify 客户端设置</span>
+          <span className="modal-title">Gotify 客户端设置</span>
           <div className="version-group">
             <button
               type="button"
               className="version-action-badge"
               onClick={handleCheckUpdate}
               disabled={checkingUpdate}
-              title="点击检查更新"
+              title={checkingUpdate ? "正在检查更新" : "点击检查更新"}
+              aria-label={`检查更新，当前版本 ${displayAppVersion}`}
             >
-              <span className="version-text">v{appVersion || "0.0.3"}</span>
-              <span className="version-divider"></span>
               <span className="version-label">
                 {checkingUpdate ? "正在检查..." : "检查更新"}
               </span>
+              <span className="version-divider"></span>
+              <span className="version-text">{displayAppVersion}</span>
             </button>
           </div>
         </div>

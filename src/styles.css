@@ -723,26 +723,47 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--border-light);
+  background: var(--panel);
+}
+
+.modal-title {
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.version-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 .version-action-badge {
-  display: flex;
+  display: inline-grid;
+  grid-template-columns: auto 1px auto;
   align-items: center;
-  height: 24px;
+  min-height: 30px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text-soft);
   overflow: hidden;
-  transition: all 0.2s;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   cursor: pointer;
 }
 
 .version-action-badge:hover {
   border-color: var(--primary);
-  background: var(--card-hover-alt);
+  background: var(--card-hover);
+}
+
+.version-action-badge:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .version-action-badge:disabled {
@@ -751,23 +772,40 @@ button {
 }
 
 .version-text {
-  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 64px;
+  padding: 0 12px;
   font-size: 11px;
+  line-height: 1;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--text-soft);
-  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  font-weight: 700;
+  background: var(--card-hover);
 }
 
 .version-divider {
   width: 1px;
-  height: 12px;
+  height: 16px;
   background: var(--border);
 }
 
 .version-label {
-  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  padding: 0 12px 0 10px;
   font-size: 11px;
-  color: var(--text-muted);
+  line-height: 1;
+  color: var(--text-soft);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .version-action-badge:hover .version-label {
@@ -776,6 +814,11 @@ button {
 
 .version-action-badge:hover .version-text {
   color: var(--text);
+  background: var(--card-hover-alt);
+}
+
+.version-action-badge:hover .version-divider {
+  background: var(--border);
 }
 
 .modal-body {
@@ -936,11 +979,6 @@ button {
   word-break: break-all;
   color: var(--text);
   font-size: var(--settings-body-size);
-}
-
-.version-text {
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
 }
 
 .toast-stack {
