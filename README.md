@@ -2,6 +2,19 @@
 
 基于 Tauri + React 构建的现代化 Gotify 桌面客户端。本目录是新的桌面端实现，与旧的 Electron 核心完全重构和隔离。后续开发、构建、发布等核心迭代都将围绕此架构展开。
 
+## 📸 界面预览 (Screenshots)
+
+### 主界面 (Main Interface)
+| 浅色模式 (Light Mode) | 深色模式 (Dark Mode) |
+| :---: | :---: |
+| ![Main UI Light](images/PixPin_2026-04-17_14-44-55.png) | ![Main UI Dark](images/PixPin_2026-04-17_14-46-22.png) |
+
+### 设置 (Settings) & 通知 (Notifications)
+| 设置页 (Settings) | 通知卡片 (Notification) |
+| :---: | :---: |
+| ![Settings](images/PixPin_2026-04-17_14-45-32.png) | ![Toast](images/PixPin_2026-04-17_14-44-27.png) |
+
+
 ## ✨ 核心特性 (Features)
 
 - **实时通讯**: Gotify WebSocket 实时连接与断线重连保障。

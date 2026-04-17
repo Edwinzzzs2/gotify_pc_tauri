@@ -1184,3 +1184,32 @@ body.toast-window-mode #root {
 .feishu-toast.clickable {
   cursor: pointer;
 }
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper .text-input {
+  width: 100%;
+  padding-right: 32px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 1;
+  transition: color 0.15s;
+}
+
+.password-toggle:hover {
+  color: var(--text);
+}
