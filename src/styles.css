@@ -382,7 +382,7 @@ button {
 .banner {
   position: absolute;
   right: 18px;
-  bottom: 58px;
+  bottom: 70px;
   z-index: 70;
   max-width: min(320px, calc(100% - 36px));
   min-height: 34px;
@@ -435,17 +435,18 @@ button {
   font-weight: 600;
 }
 
-.pinned-icon {
-  width: 18px;
+.pinned-label {
   height: 18px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--btn-primary-text);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: color-mix(in srgb, var(--primary) 13%, var(--panel));
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
   flex: 0 0 auto;
 }
 
@@ -456,7 +457,7 @@ button {
 }
 
 .pinned-body-line {
-  padding-left: 26px;
+  padding-left: 38px;
   color: var(--text-soft);
   font-size: 12px;
   line-height: 18px;
@@ -775,27 +776,29 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  min-height: 60px;
+  padding: 12px 22px;
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .status-text-label {
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .flat-button {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 0 12px;
-  height: 28px;
-  font-size: 12px;
+  padding: 0 16px;
+  height: 34px;
+  min-width: 62px;
+  font-size: 13px;
   color: var(--text);
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
@@ -815,8 +818,8 @@ button {
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
 }
 

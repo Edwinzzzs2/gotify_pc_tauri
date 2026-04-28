@@ -42,13 +42,6 @@ function formatNotificationBody(rawText?: string) {
 export function extractVerificationCode(message: MessageItem) {
   const title = String(message.title || "");
   const body = String(message.message || "");
-  const preferredLine = body
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.includes("新零帮") && /\d{4,8}/.test(line));
-  if (preferredLine) {
-    return preferredLine.match(/\d{4,8}/)?.[0] || "";
-  }
   if ((title.includes("验证码") || body.includes("验证码")) && /\d{4,8}/.test(body)) {
     const match = body.match(/\d{4,8}/);
     return match?.[0] || "";

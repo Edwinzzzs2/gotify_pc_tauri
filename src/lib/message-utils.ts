@@ -3,13 +3,6 @@ const VERIFICATION_CODE_RE = /\d{4,8}/;
 export function extractVerificationCode(title: string, body: string) {
   const sourceTitle = String(title || "");
   const sourceBody = String(body || "");
-  const lines = sourceBody.split("\n").map((line) => line.trim()).filter(Boolean);
-
-  // 今日登录验证码里常有多组环境码，优先取新零帮相关行，避免复制到 iDaaS 环境码。
-  const preferredLine = lines.find((line) => line.includes("新零帮") && VERIFICATION_CODE_RE.test(line));
-  if (preferredLine) {
-    return preferredLine.match(VERIFICATION_CODE_RE)?.[0] || "";
-  }
 
   if ((sourceTitle.includes("验证码") || sourceBody.includes("验证码")) && VERIFICATION_CODE_RE.test(sourceBody)) {
     return sourceBody.match(VERIFICATION_CODE_RE)?.[0] || "";

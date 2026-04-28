@@ -496,7 +496,7 @@ function MainApp() {
             <div className="pinned-message-bar">
               <div className="pinned-message-copy">
                 <div className="pinned-title-line">
-                  <span className="pinned-icon">↑</span>
+                  <span className="pinned-label">置顶</span>
                   <span className="pinned-title">{pinnedMessage.title || "无标题"}</span>
                 </div>
                 <div className="pinned-body-line">{getPinnedPreviewText(String(pinnedMessage.message || ""))}</div>
