@@ -16,6 +16,7 @@ export const DEFAULT_CONFIG = {
   barkServerUrl: "",
   barkForwardApps: [] as number[],
   mutedNotificationApps: [] as number[],
+  autoPinApps: [] as number[],
   themeMode: "white" as ThemeMode,
 };
 
@@ -35,6 +36,8 @@ export type MessageItem = {
   title?: string;
   message?: string;
   favorite?: boolean;
+  pinnedAt?: number;
+  pinnedUntil?: number;
 };
 
 export type StorageMeta = {

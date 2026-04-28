@@ -160,13 +160,31 @@ fn deduplicate_messages(messages: Vec<MessageItem>) -> Vec<MessageItem> {
     deduped
 }
 
+fn current_timestamp_millis() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as i64)
+        .unwrap_or_default()
+}
+
+fn clear_expired_pins(mut messages: Vec<MessageItem>) -> Vec<MessageItem> {
+    let now = current_timestamp_millis();
+    for message in &mut messages {
+        if message.pinned_until.unwrap_or_default() <= now {
+            message.pinned_at = None;
+            message.pinned_until = None;
+        }
+    }
+    messages
+}
+
 fn read_messages(storage_dir: &Path) -> Vec<MessageItem> {
     let path = history_path(storage_dir);
     let messages = fs::read_to_string(path)
         .ok()
         .and_then(|raw| serde_json::from_str::<Vec<MessageItem>>(&raw).ok())
         .unwrap_or_default();
-    deduplicate_messages(messages)
+    clear_expired_pins(deduplicate_messages(messages))
 }
 
 fn write_messages(storage_dir: &Path, messages: &[MessageItem]) -> Result<(), String> {
@@ -271,6 +289,12 @@ pub fn add_message(message: MessageItem, state: State<AppState>) -> Result<(), S
     if exists {
         return Ok(());
     }
+    if message.pinned_until.unwrap_or_default() > current_timestamp_millis() {
+        for item in &mut messages {
+            item.pinned_at = None;
+            item.pinned_until = None;
+        }
+    }
     messages.insert(0, message);
     if messages.len() > MAX_MESSAGES {
         messages.truncate(MAX_MESSAGES);
@@ -298,6 +322,37 @@ pub fn toggle_favorite(id: i64, state: State<AppState>) -> Result<bool, String> 
     }
     write_messages(&storage_dir, &messages)?;
     Ok(next_favorite)
+}
+
+#[tauri::command]
+pub fn toggle_pin(id: i64, pinned_until: i64, state: State<AppState>) -> Result<Option<i64>, String> {
+    let storage_dir = state.current_storage_dir();
+    let mut messages = read_messages(&storage_dir);
+    let now = current_timestamp_millis();
+    if !messages.iter().any(|message| message.id.unwrap_or_default() == id) {
+        return Err("未找到要置顶的消息".into());
+    }
+    let target_is_active = messages
+        .iter()
+        .find(|message| message.id.unwrap_or_default() == id)
+        .map(|message| message.pinned_until.unwrap_or_default() > now)
+        .unwrap_or(false);
+    let next_until = if target_is_active { None } else { Some(pinned_until.max(now + 1)) };
+
+    // 当前只保留一个有效置顶，符合主界面顶部单条置顶栏的展示方式。
+    for message in &mut messages {
+        message.pinned_at = None;
+        message.pinned_until = None;
+        if message.id.unwrap_or_default() == id {
+            if let Some(pinned_until) = next_until {
+                message.pinned_at = Some(now);
+                message.pinned_until = Some(pinned_until);
+            }
+        }
+    }
+
+    write_messages(&storage_dir, &messages)?;
+    Ok(next_until)
 }
 
 #[tauri::command]

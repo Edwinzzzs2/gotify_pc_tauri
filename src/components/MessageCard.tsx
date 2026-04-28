@@ -1,22 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import type { MessageItem } from "@/lib/types";
+import { extractVerificationCode } from "@/lib/message-utils";
 
 type MessageCardProps = {
   item: MessageItem;
   appLabel?: string;
+  isPinned?: boolean;
   onToggleFavorite: (id: number) => void;
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>, item: MessageItem) => void;
   formatDate: (value?: string | number) => string;
 };
 
-function extractVerificationCode(title: string, body: string) {
-  if ((title.includes("验证码") || body.includes("验证码")) && /\d{4,8}/.test(body)) {
-    const match = body.match(/\d{4,8}/);
-    return match?.[0] || "";
-  }
-  return "";
-}
-
-export function MessageCard({ item, appLabel, onToggleFavorite, formatDate }: MessageCardProps) {
+export function MessageCard({ item, appLabel, isPinned, onToggleFavorite, onContextMenu, formatDate }: MessageCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const rawMessage = String(item.message || "");
@@ -39,7 +34,7 @@ export function MessageCard({ item, appLabel, onToggleFavorite, formatDate }: Me
 
   const code = extractVerificationCode(String(item.title || ""), rawMessage);
 
-  const copyCode = async (event: React.MouseEvent) => {
+  const copyCode = async (event: MouseEvent) => {
     event.stopPropagation();
     if (code) {
       await navigator.clipboard.writeText(code).catch(() => undefined);
@@ -49,13 +44,14 @@ export function MessageCard({ item, appLabel, onToggleFavorite, formatDate }: Me
   };
 
   return (
-    <div className="message-card">
+    <div className={`message-card ${isPinned ? "pinned" : ""}`} onContextMenu={(event) => onContextMenu?.(event, item)}>
       <div className="message-priority" style={{ backgroundColor: priorityColor }}></div>
       <div className="message-content">
         {/* Row 1: Title + meta */}
         <div className="message-row1">
           <div className="message-title-group">
             <div className="message-title">{item.title || "无标题"}</div>
+            {isPinned ? <span className="message-pin-badge">置顶</span> : null}
             {code ? (
               <button
                 type="button"

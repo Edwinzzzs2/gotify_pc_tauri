@@ -84,7 +84,7 @@ export function SettingsModal({
       : `v${appVersion}`
     : "v0.0.3";
 
-  const toggleNumberList = (key: "mutedNotificationApps" | "barkForwardApps", id: number) => {
+  const toggleNumberList = (key: "mutedNotificationApps" | "barkForwardApps" | "autoPinApps", id: number) => {
     setConfig((prev) => {
       const current = Array.isArray(prev[key]) ? prev[key] : [];
       if (current.includes(id)) {
@@ -216,6 +216,24 @@ export function SettingsModal({
                 disabled={!config.notificationAutoHide || config.notificationNeverClose}
                 onChange={(event) => setConfig((prev) => ({ ...prev, notificationDuration: Number(event.target.value || 0) }))}
               />
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <div className="field-label">自动置顶分组</div>
+              <div className="group-list" style={{ marginTop: 10 }}>
+                {applications.length === 0 ? (
+                  <div className="empty-text">暂无分组，请先连接服务器</div>
+                ) : (
+                  <div className="checkbox-grid">
+                    {applications.map((app) => (
+                      <label key={app.id} className="checkbox-item">
+                        <input type="checkbox" checked={config.autoPinApps.includes(app.id)} onChange={() => toggleNumberList("autoPinApps", app.id)} />
+                        <span>{app.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="field-hint" style={{ marginTop: 8 }}>选中的分组收到新消息后，会自动置顶到当天结束。</div>
             </div>
             <div style={{ marginTop: 16 }}>
               <div className="field-label">屏蔽弹窗分组</div>

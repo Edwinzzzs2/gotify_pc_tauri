@@ -5,7 +5,7 @@ use tauri::Manager;
 use storage::{
     add_message, clear_messages, close_toast_window, get_messages, get_storage_meta, get_toast_payload,
     load_app_state, open_storage_path, quit_app, resolve_storage_dir, save_config, set_storage_path,
-    show_custom_toast, show_main_window, toggle_favorite, AppState,
+    show_custom_toast, show_main_window, toggle_favorite, toggle_pin, AppState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -36,6 +36,7 @@ pub fn run() {
             add_message,
             clear_messages,
             toggle_favorite,
+            toggle_pin,
             get_storage_meta,
             set_storage_path,
             open_storage_path,

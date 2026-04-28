@@ -18,6 +18,8 @@ pub struct Config {
     pub bark_server_url: String,
     pub bark_forward_apps: Vec<i64>,
     pub muted_notification_apps: Vec<i64>,
+    #[serde(default)]
+    pub auto_pin_apps: Vec<i64>,
     pub theme_mode: String,
 }
 
@@ -39,6 +41,7 @@ impl Default for Config {
             bark_server_url: String::new(),
             bark_forward_apps: Vec::new(),
             muted_notification_apps: Vec::new(),
+            auto_pin_apps: Vec::new(),
             theme_mode: "white".into(),
         }
     }
@@ -55,6 +58,8 @@ pub struct MessageItem {
     pub title: Option<String>,
     pub message: Option<String>,
     pub favorite: Option<bool>,
+    pub pinned_at: Option<i64>,
+    pub pinned_until: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

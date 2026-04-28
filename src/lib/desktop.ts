@@ -9,6 +9,7 @@ import { disable as disableAutostart, enable as enableAutostart, isEnabled as is
 import { open } from "@tauri-apps/plugin-dialog";
 import { requestPermission } from "@tauri-apps/plugin-notification";
 import { BrowserGotifyClient } from "./gotify-client";
+import { getNextLocalMidnightMs } from "./message-utils";
 import {
   DEFAULT_CONFIG,
   type ApplicationInfo,
@@ -41,6 +42,13 @@ function formatNotificationBody(rawText?: string) {
 export function extractVerificationCode(message: MessageItem) {
   const title = String(message.title || "");
   const body = String(message.message || "");
+  const preferredLine = body
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.includes("新零帮") && /\d{4,8}/.test(line));
+  if (preferredLine) {
+    return preferredLine.match(/\d{4,8}/)?.[0] || "";
+  }
   if ((title.includes("验证码") || body.includes("验证码")) && /\d{4,8}/.test(body)) {
     const match = body.match(/\d{4,8}/);
     return match?.[0] || "";
@@ -228,6 +236,10 @@ export class DesktopRuntime {
     return invoke<boolean>("toggle_favorite", { id });
   }
 
+  async togglePin(id: number, pinnedUntil: number) {
+    return invoke<number | null>("toggle_pin", { id, pinnedUntil });
+  }
+
   async getStoragePath() {
     return invoke<StorageMeta>("get_storage_meta");
   }
@@ -309,7 +321,12 @@ export class DesktopRuntime {
       appname = this.getAppNameById(appid);
     }
 
-    const enriched = appname ? { ...message, appname } : message;
+    const shouldAutoPin = Array.isArray(this.config.autoPinApps) && this.config.autoPinApps.includes(appid);
+    const enriched = {
+      ...message,
+      ...(appname ? { appname } : {}),
+      ...(shouldAutoPin ? { pinnedAt: Date.now(), pinnedUntil: getNextLocalMidnightMs() } : {}),
+    };
     await invoke("add_message", { message: enriched });
     this.messageListeners.forEach((listener) => listener(enriched));
 

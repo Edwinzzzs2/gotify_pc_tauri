@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { CustomToastCard } from "@/components/CustomToast";
 import { MessageCard } from "@/components/MessageCard";
 import { SettingsModal } from "@/components/SettingsModal";
 import { desktopRuntime } from "@/lib/desktop";
+import { extractVerificationCode, getNextLocalMidnightMs, getPinnedPreviewText, isPinActive } from "@/lib/message-utils";
 import { applyThemeMode, getStoredThemeMode } from "@/lib/theme";
 import {
   DEFAULT_CONFIG,
@@ -18,6 +19,12 @@ import {
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const isToastWindow = getCurrentWindow().label.startsWith("toast");
+
+type MessageMenuState = {
+  messageId: number;
+  x: number;
+  y: number;
+};
 
 function formatDate(value?: string | number) {
   if (value === undefined || value === null) {
@@ -130,6 +137,9 @@ function MainApp() {
   const [searchText, setSearchText] = useState("");
   const [showFavorites, setShowFavorites] = useState(false);
   const [appVersion, setAppVersion] = useState("-");
+  const [messageMenu, setMessageMenu] = useState<MessageMenuState | null>(null);
+  const [nowMs, setNowMs] = useState(Date.now());
+  const [pinnedCopied, setPinnedCopied] = useState(false);
 
   useEffect(() => {
     applyThemeMode(config.themeMode);
@@ -151,7 +161,17 @@ function MainApp() {
     const run = async () => {
       try {
         unsubStatus = desktopRuntime.onConnectionStatus((payload) => active && setStatus(payload));
-        unsubMessage = desktopRuntime.onNewMessage((payload) => active && setMessages((prev) => [payload, ...prev]));
+        unsubMessage = desktopRuntime.onNewMessage((payload) => {
+          if (!active) {
+            return;
+          }
+          setMessages((prev) => {
+            if (!isPinActive(payload.pinnedUntil)) {
+              return [payload, ...prev];
+            }
+            return [payload, ...prev.map((item) => ({ ...item, pinnedAt: undefined, pinnedUntil: undefined }))];
+          });
+        });
         unsubOpenSettings = desktopRuntime.onOpenSettings(() => active && setSettingsOpen(true));
         unsubMessagesCleared = desktopRuntime.onMessagesCleared(() => active && setMessages([]));
 
@@ -204,6 +224,36 @@ function MainApp() {
     return () => window.clearTimeout(timer);
   }, [banner]);
 
+  useEffect(() => {
+    if (!messageMenu) {
+      return undefined;
+    }
+    const closeMenu = () => setMessageMenu(null);
+    window.addEventListener("click", closeMenu);
+    window.addEventListener("keydown", closeMenu);
+    window.addEventListener("scroll", closeMenu, true);
+    return () => {
+      window.removeEventListener("click", closeMenu);
+      window.removeEventListener("keydown", closeMenu);
+      window.removeEventListener("scroll", closeMenu, true);
+    };
+  }, [messageMenu]);
+
+  useEffect(() => {
+    const nextExpiry = messages
+      .map((item) => Number(item.pinnedUntil || 0))
+      .filter((time) => time > nowMs)
+      .sort((a, b) => a - b)[0];
+    if (!nextExpiry) {
+      return undefined;
+    }
+
+    // 置顶到期后自动刷新一次界面状态，避免用户长时间开着窗口时仍看到过期置顶。
+    const delay = Math.min(Math.max(nextExpiry - Date.now() + 250, 250), 2147483647);
+    const timer = window.setTimeout(() => setNowMs(Date.now()), delay);
+    return () => window.clearTimeout(timer);
+  }, [messages, nowMs]);
+
   const statusClass = status.phase === "online"
     ? "online"
     : status.phase === "connecting"
@@ -244,6 +294,12 @@ function MainApp() {
   }, [messages, searchText, selectedAppId, showFavorites]);
 
   const favoriteCount = useMemo(() => messages.filter((item) => item.favorite).length, [messages]);
+
+  const pinnedMessage = useMemo(() => {
+    return messages
+      .filter((item) => isPinActive(item.pinnedUntil))
+      .sort((a, b) => Number(b.pinnedAt || 0) - Number(a.pinnedAt || 0))[0] || null;
+  }, [messages, nowMs]);
 
   const getAppLabel = (appid?: number) => {
     const id = Number(appid || 0);
@@ -355,6 +411,52 @@ function MainApp() {
     }
   };
 
+  const onTogglePin = async (id: number) => {
+    try {
+      const pinnedUntil = await desktopRuntime.togglePin(id, getNextLocalMidnightMs());
+      setMessages((prev) =>
+        prev.map((item) => {
+          if (item.id !== id) {
+            return { ...item, pinnedAt: undefined, pinnedUntil: undefined };
+          }
+          return pinnedUntil
+            ? { ...item, pinnedAt: Date.now(), pinnedUntil }
+            : { ...item, pinnedAt: undefined, pinnedUntil: undefined };
+        })
+      );
+      setNowMs(Date.now());
+      setMessageMenu(null);
+      setBanner(pinnedUntil ? "已置顶，今日有效" : "已取消置顶");
+    } catch {
+      setBanner("置顶操作失败，请重试");
+    }
+  };
+
+  const openMessageMenu = (event: MouseEvent<HTMLDivElement>, item: MessageItem) => {
+    event.preventDefault();
+    if (!item.id) {
+      return;
+    }
+    setMessageMenu({
+      messageId: item.id,
+      x: Math.max(8, Math.min(event.clientX, window.innerWidth - 150)),
+      y: Math.max(8, Math.min(event.clientY, window.innerHeight - 76)),
+    });
+  };
+
+  const copyPinnedCode = async () => {
+    if (!pinnedMessage) {
+      return;
+    }
+    const code = extractVerificationCode(String(pinnedMessage.title || ""), String(pinnedMessage.message || ""));
+    if (!code) {
+      return;
+    }
+    await navigator.clipboard.writeText(code).catch(() => undefined);
+    setPinnedCopied(true);
+    window.setTimeout(() => setPinnedCopied(false), 1600);
+  };
+
   if (loading) {
     return (
       <div className="app-shell">
@@ -390,15 +492,51 @@ function MainApp() {
 
           {banner ? <div className="banner">{banner}</div> : null}
 
+          {pinnedMessage ? (
+            <div className="pinned-message-bar">
+              <div className="pinned-message-copy">
+                <div className="pinned-title-line">
+                  <span className="pinned-icon">↑</span>
+                  <span className="pinned-title">{pinnedMessage.title || "无标题"}</span>
+                </div>
+                <div className="pinned-body-line">{getPinnedPreviewText(String(pinnedMessage.message || ""))}</div>
+              </div>
+              <div className="pinned-actions">
+                {extractVerificationCode(String(pinnedMessage.title || ""), String(pinnedMessage.message || "")) ? (
+                  <button type="button" className={`captcha-button pinned-copy-button ${pinnedCopied ? "copied" : ""}`} onClick={copyPinnedCode}>
+                    {pinnedCopied ? "已复制" : "复制验证码"}
+                  </button>
+                ) : null}
+                <button type="button" className="pinned-close-button" title="取消置顶" onClick={() => pinnedMessage.id && void onTogglePin(pinnedMessage.id)}>×</button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="message-list">
             {visibleMessages.length === 0 ? (
               <div className="empty-state">当前没有符合条件的消息</div>
             ) : (
               visibleMessages.map((item) => (
-                <MessageCard key={`${item.id}-${item.date}`} item={item} appLabel={getAppLabel(item.appid)} onToggleFavorite={onToggleFavorite} formatDate={formatDate} />
+                <MessageCard
+                  key={`${item.id}-${item.date}`}
+                  item={item}
+                  appLabel={getAppLabel(item.appid)}
+                  isPinned={pinnedMessage?.id === item.id}
+                  onToggleFavorite={onToggleFavorite}
+                  onContextMenu={openMessageMenu}
+                  formatDate={formatDate}
+                />
               ))
             )}
           </div>
+
+          {messageMenu ? (
+            <div className="message-context-menu" style={{ left: messageMenu.x, top: messageMenu.y }} onClick={(event) => event.stopPropagation()}>
+              <button type="button" onClick={() => void onTogglePin(messageMenu.messageId)}>
+                {pinnedMessage?.id === messageMenu.messageId ? "取消置顶" : "置顶到今日结束"}
+              </button>
+            </div>
+          ) : null}
 
           <div className="footer-panel flat-footer">
             <div className="footer-bar">
