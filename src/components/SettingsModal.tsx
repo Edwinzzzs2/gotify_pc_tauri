@@ -49,6 +49,15 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const [showToken, setShowToken] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [autoPinEnabled, setAutoPinEnabled] = useState(
+    () => Array.isArray(config.autoPinApps) && config.autoPinApps.length > 0
+  );
+  const [mutedEnabled, setMutedEnabled] = useState(
+    () => Array.isArray(config.mutedNotificationApps) && config.mutedNotificationApps.length > 0
+  );
+  const [barkEnabled, setBarkEnabled] = useState(
+    () => !!(config.barkServerUrl)
+  );
 
   const handleCheckUpdate = async () => {
     try {
@@ -218,73 +227,128 @@ export function SettingsModal({
               />
             </div>
             <div style={{ marginTop: 16 }}>
-              <div className="field-label">自动置顶分组</div>
-              <div className="group-list" style={{ marginTop: 10 }}>
-                {applications.length === 0 ? (
-                  <div className="empty-text">暂无分组，请先连接服务器</div>
-                ) : (
-                  <div className="checkbox-grid">
-                    {applications.map((app) => (
-                      <label key={app.id} className="checkbox-item">
-                        <input type="checkbox" checked={config.autoPinApps.includes(app.id)} onChange={() => toggleNumberList("autoPinApps", app.id)} />
-                        <span>{app.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+              <div className="toggle-section-header">
+                <span className="field-label">自动置顶分组</span>
+                <label className="toggle-switch" title={autoPinEnabled ? "点击关闭" : "点击开启"}>
+                  <input
+                    type="checkbox"
+                    checked={autoPinEnabled}
+                    onChange={(e) => {
+                      setAutoPinEnabled(e.target.checked);
+                      if (!e.target.checked) {
+                        setConfig((prev) => ({ ...prev, autoPinApps: [] }));
+                      }
+                    }}
+                  />
+                  <span className="toggle-track"><span className="toggle-thumb" /></span>
+                </label>
               </div>
-              <div className="field-hint" style={{ marginTop: 8 }}>选中的分组收到新消息后，会自动置顶到当天结束。</div>
+              {autoPinEnabled && (
+                <>
+                  <div className="group-list" style={{ marginTop: 10 }}>
+                    {applications.length === 0 ? (
+                      <div className="empty-text">暂无分组，请先连接服务器</div>
+                    ) : (
+                      <div className="checkbox-grid">
+                        {applications.map((app) => (
+                          <label key={app.id} className="checkbox-item">
+                            <input type="checkbox" checked={config.autoPinApps.includes(app.id)} onChange={() => toggleNumberList("autoPinApps", app.id)} />
+                            <span>{app.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="field-hint" style={{ marginTop: 8 }}>选中的分组收到新消息后，会自动置顶到当天结束。</div>
+                </>
+              )}
             </div>
             <div style={{ marginTop: 16 }}>
-              <div className="field-label">屏蔽弹窗分组</div>
-              <div className="group-list" style={{ marginTop: 10 }}>
-                {applications.length === 0 ? (
-                  <div className="empty-text">暂无分组，请先连接服务器</div>
-                ) : (
-                  <div className="checkbox-grid">
-                    {applications.map((app) => (
-                      <label key={app.id} className="checkbox-item">
-                        <input type="checkbox" checked={config.mutedNotificationApps.includes(app.id)} onChange={() => toggleNumberList("mutedNotificationApps", app.id)} />
-                        <span>{app.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+              <div className="toggle-section-header">
+                <span className="field-label">屏蔽弹窗分组</span>
+                <label className="toggle-switch" title={mutedEnabled ? "点击关闭" : "点击开启"}>
+                  <input
+                    type="checkbox"
+                    checked={mutedEnabled}
+                    onChange={(e) => {
+                      setMutedEnabled(e.target.checked);
+                      if (!e.target.checked) {
+                        setConfig((prev) => ({ ...prev, mutedNotificationApps: [] }));
+                      }
+                    }}
+                  />
+                  <span className="toggle-track"><span className="toggle-thumb" /></span>
+                </label>
               </div>
-              <div className="field-hint" style={{ marginTop: 8 }}>选中的分组仍会入历史记录，但不再弹出提示。</div>
+              {mutedEnabled && (
+                <>
+                  <div className="group-list" style={{ marginTop: 10 }}>
+                    {applications.length === 0 ? (
+                      <div className="empty-text">暂无分组，请先连接服务器</div>
+                    ) : (
+                      <div className="checkbox-grid">
+                        {applications.map((app) => (
+                          <label key={app.id} className="checkbox-item">
+                            <input type="checkbox" checked={config.mutedNotificationApps.includes(app.id)} onChange={() => toggleNumberList("mutedNotificationApps", app.id)} />
+                            <span>{app.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="field-hint" style={{ marginTop: 8 }}>选中的分组仍会入历史记录，但不再弹出提示。</div>
+                </>
+              )}
             </div>
           </section>
 
           <section className="section-card">
-            <div className="section-title">Bark 转发</div>
-            <div className="form-grid">
-              <div className="form-row compact">
-                <div className="field-label">Bark 地址</div>
+            <div className="toggle-section-header" style={{ marginBottom: barkEnabled ? 10 : 0 }}>
+              <span className="section-title" style={{ marginBottom: 0 }}>Bark 转发</span>
+              <label className="toggle-switch" title={barkEnabled ? "点击关闭" : "点击开启"}>
                 <input
-                  className="text-input"
-                  value={config.barkServerUrl}
-                  onChange={(event) => setConfig((prev) => ({ ...prev, barkServerUrl: event.target.value }))}
-                  placeholder="https://api.day.app/YOUR_KEY"
+                  type="checkbox"
+                  checked={barkEnabled}
+                  onChange={(e) => {
+                    setBarkEnabled(e.target.checked);
+                    if (!e.target.checked) {
+                      setConfig((prev) => ({ ...prev, barkServerUrl: "", barkForwardApps: [] }));
+                    }
+                  }}
                 />
-              </div>
-              <div>
-                <div className="field-label">允许转发的分组</div>
-                <div className="group-list" style={{ marginTop: 10 }}>
-                  {applications.length === 0 ? (
-                    <div className="empty-text">暂无分组，请先连接服务器</div>
-                  ) : (
-                    <div className="checkbox-grid">
-                      {applications.map((app) => (
-                        <label key={app.id} className="checkbox-item">
-                          <input type="checkbox" checked={config.barkForwardApps.includes(app.id)} onChange={() => toggleNumberList("barkForwardApps", app.id)} />
-                          <span>{app.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
+                <span className="toggle-track"><span className="toggle-thumb" /></span>
+              </label>
+            </div>
+            {barkEnabled && (
+              <div className="form-grid">
+                <div className="form-row compact">
+                  <div className="field-label">Bark 地址</div>
+                  <input
+                    className="text-input"
+                    value={config.barkServerUrl}
+                    onChange={(event) => setConfig((prev) => ({ ...prev, barkServerUrl: event.target.value }))}
+                    placeholder="https://api.day.app/YOUR_KEY"
+                  />
+                </div>
+                <div>
+                  <div className="field-label">允许转发的分组</div>
+                  <div className="group-list" style={{ marginTop: 10 }}>
+                    {applications.length === 0 ? (
+                      <div className="empty-text">暂无分组，请先连接服务器</div>
+                    ) : (
+                      <div className="checkbox-grid">
+                        {applications.map((app) => (
+                          <label key={app.id} className="checkbox-item">
+                            <input type="checkbox" checked={config.barkForwardApps.includes(app.id)} onChange={() => toggleNumberList("barkForwardApps", app.id)} />
+                            <span>{app.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </section>
 
           <section className="section-card">
